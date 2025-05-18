@@ -1,13 +1,43 @@
 document.addEventListener('DOMContentLoaded', async () => {
   const toggle = document.getElementById('enableToggle');
+  const cagrInput = document.getElementById('cagrInput');
+  const yearsInput = document.getElementById('yearsInput');
+  const btcPriceElement = document.querySelector('.btc-price');
+  const btcUpdatedElement = document.querySelector('.btc-updated');
   
   // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const hostname = new URL(tab.url).hostname;
 
-  // Load saved state
-  const { enabledSites = {} } = await chrome.storage.sync.get('enabledSites');
+  // Load saved state and settings
+  const { 
+    enabledSites = {}, 
+    settings = { cagr: 40, years: 4 },
+    btcPrices = {}
+  } = await chrome.storage.sync.get(['enabledSites', 'settings', 'btcPrices']);
+  
+  // Initialize toggle state
   toggle.checked = enabledSites[hostname] !== false; // Default to enabled
+
+  // Initialize settings inputs
+  cagrInput.value = settings.cagr;
+  yearsInput.value = settings.years;
+
+  // Show Bitcoin price
+  if (btcPrices.bitcoin?.usd) {
+    const price = btcPrices.bitcoin.usd.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    });
+    btcPriceElement.textContent = `BTC: ${price}`;
+    
+    // Show last update time
+    const lastUpdate = new Date(btcPrices.lastUpdate || Date.now());
+    btcUpdatedElement.textContent = `Last updated: ${lastUpdate.toLocaleString()}`;
+  } else {
+    btcPriceElement.textContent = 'BTC price unavailable';
+    btcUpdatedElement.textContent = 'Please refresh the page';
+  }
 
   // Handle toggle changes
   toggle.addEventListener('change', async () => {
@@ -21,4 +51,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       enabled: toggle.checked
     });
   });
+
+  // Handle settings changes
+  async function updateSettings() {
+    const cagr = parseInt(cagrInput.value, 10);
+    const years = parseInt(yearsInput.value, 10);
+    
+    if (isNaN(cagr) || isNaN(years)) return;
+    if (cagr < 1 || cagr > 100) return;
+    if (years < 1 || years > 30) return;
+
+    const settings = { cagr, years };
+    await chrome.storage.sync.set({ settings });
+    
+    // Notify content script
+    chrome.tabs.sendMessage(tab.id, {
+      type: 'SETTINGS_CHANGED',
+      settings
+    });
+  }
+
+  cagrInput.addEventListener('change', updateSettings);
+  yearsInput.addEventListener('change', updateSettings);
 }); 

@@ -1,22 +1,38 @@
-# Node modules (if you use npm/yarn for tooling)
-node_modules/
-
-# OS generated files
+# System files
 .DS_Store
 Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Chrome Extension packaging
+*.crx
+*.pem
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
 
 # Build output (if any)
 dist/
 build/
-
-# Logs
-*.log
-
-# VSCode settings
-.vscode/
-
-# Chrome extension local storage (if any)
-*.local.json
 
 # Misc
 *.swp
