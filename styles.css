@@ -1,0 +1,62 @@
+.btc-opportunity-cost {
+  color: #f7931a; /* Bitcoin orange */
+  font-weight: bold;
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.btc-opportunity-cost .btc-opportunity-tooltip {
+  visibility: hidden;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 250px;
+  background-color: #2d2d2d;
+  color: white;
+  border-radius: 8px;
+  padding: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.btc-opportunity-cost:hover .btc-opportunity-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.btc-opportunity-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: #2d2d2d transparent transparent transparent;
+}
+
+.btc-opportunity-tooltip .tooltip-header {
+  background-color: #f7931a;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px 8px 0 0;
+  font-weight: bold;
+}
+
+.btc-opportunity-tooltip .tooltip-content {
+  padding: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.btc-opportunity-tooltip .tooltip-footer {
+  font-size: 12px;
+  color: #999;
+  margin-top: 8px;
+  border-top: 1px solid #444;
+  padding-top: 8px;
+} 
