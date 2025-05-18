@@ -12,9 +12,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load saved state and settings
   const { 
     enabledSites = {}, 
-    settings = { cagr: 40, years: 4 },
-    btcPrices = {}
-  } = await chrome.storage.sync.get(['enabledSites', 'settings', 'btcPrices']);
+    settings = { cagr: 40, years: 4 }
+  } = await chrome.storage.sync.get(['enabledSites', 'settings']);
   
   // Initialize toggle state
   toggle.checked = enabledSites[hostname] !== false; // Default to enabled
@@ -23,16 +22,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   cagrInput.value = settings.cagr;
   yearsInput.value = settings.years;
 
-  // Show Bitcoin price
-  if (btcPrices.bitcoin?.usd) {
+  // Get and display Bitcoin price
+  const { btcPrices } = await chrome.storage.local.get('btcPrices');
+  if (btcPrices?.bitcoin?.usd) {
     const price = btcPrices.bitcoin.usd.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD'
     });
     btcPriceElement.textContent = `BTC: ${price}`;
     
-    // Show last update time
-    const lastUpdate = new Date(btcPrices.lastUpdate || Date.now());
+    const lastUpdate = new Date(btcPrices.timestamp);
     btcUpdatedElement.textContent = `Last updated: ${lastUpdate.toLocaleString()}`;
   } else {
     btcPriceElement.textContent = 'BTC price unavailable';
@@ -41,7 +40,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Handle toggle changes
   toggle.addEventListener('change', async () => {
-    const { enabledSites = {} } = await chrome.storage.sync.get('enabledSites');
     enabledSites[hostname] = toggle.checked;
     await chrome.storage.sync.set({ enabledSites });
     

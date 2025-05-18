@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <style>
     body {
-      width: 320px;
+      width: 300px;
       padding: 16px;
-      font-family: system-ui, -apple-system, sans-serif;
-      color: #333;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       margin: 0;
     }
 
@@ -43,8 +43,8 @@
     .switch {
       position: relative;
       display: inline-block;
-      width: 50px;
-      height: 24px;
+      width: 40px;
+      height: 20px;
       margin-right: 12px;
     }
 
@@ -63,7 +63,7 @@
       bottom: 0;
       background-color: #ccc;
       transition: .4s;
-      border-radius: 24px;
+      border-radius: 20px;
     }
 
     .slider:before {
@@ -71,8 +71,8 @@
       content: "";
       height: 16px;
       width: 16px;
-      left: 4px;
-      bottom: 4px;
+      left: 2px;
+      bottom: 2px;
       background-color: white;
       transition: .4s;
       border-radius: 50%;
@@ -83,40 +83,12 @@
     }
 
     input:checked + .slider:before {
-      transform: translateX(26px);
+      transform: translateX(20px);
     }
 
     .status {
       font-size: 14px;
       color: #666;
-    }
-
-    .settings {
-      margin-bottom: 16px;
-    }
-
-    .settings-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .settings-label {
-      color: #666;
-    }
-
-    .settings-value {
-      font-weight: 500;
-      color: #333;
-    }
-
-    input[type="number"] {
-      width: 60px;
-      padding: 4px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
     }
 
     .btc-info {
@@ -130,12 +102,37 @@
       font-size: 18px;
       font-weight: 600;
       color: #f7931a;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
 
     .btc-updated {
       font-size: 12px;
       color: #666;
+    }
+
+    .settings {
+      margin-bottom: 16px;
+    }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      padding: 4px 0;
+    }
+
+    .settings-label {
+      font-size: 14px;
+      color: #666;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      padding: 4px 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
     }
 
     .footer {
@@ -171,13 +168,13 @@
     <div class="settings-row">
       <span class="settings-label">Growth Rate (CAGR)</span>
       <div>
-        <input type="number" id="cagrInput" min="1" max="100" step="1"> %
+        <input type="number" id="cagrInput" min="1" max="100" step="1" value="40"> %
       </div>
     </div>
     <div class="settings-row">
       <span class="settings-label">Time Horizon</span>
       <div>
-        <input type="number" id="yearsInput" min="1" max="30" step="1"> years
+        <input type="number" id="yearsInput" min="1" max="30" step="1" value="4"> years
       </div>
     </div>
   </div>
