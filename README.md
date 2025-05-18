@@ -1,5 +1,9 @@
 # Bitcoin Opportunity Cost Chrome Extension
 
+Ever wanted to feel a jolt of shock when you see the price of something you're about to buy. Ever wanted to feel what the opportunity cost of spending those sats would be in today's fiat currency?
+
+Then this is the right plugin for you. It simply shows you the same price in fiat, if you had saved in bitcoin instead. And the CAGR is not even set to bullish.
+
 This Chrome extension shows the opportunity cost of purchases in terms of potential Bitcoin value. When you browse websites, it automatically detects prices and shows what they could be worth in the future if that money was invested in Bitcoin instead.
 
 > "Bitcoin will teach everyone opportunity cost" ~ Saifedean Ammous
@@ -103,4 +107,4 @@ MIT License - See LICENSE file for details
 ## Credits
 
 - Bitcoin price data provided by [CoinGecko](https://www.coingecko.com/)
-- Icon design inspired by Bitcoin's logo 
+- Icon design inspired by Libby's orange-tinted view of the world.
