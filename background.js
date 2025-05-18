@@ -11,9 +11,7 @@ async function fetchAndStorePrices(retryCount = 0) {
   const RETRY_DELAY = 5000; // 5 seconds
 
   try {
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur,gbp,jpy,cad,aud,chf,cny,sek,nzd', {
-      timeout: 10000 // 10 second timeout
-    });
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,eur,gbp,jpy,cad,aud,chf,cny,sek,nzd');
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

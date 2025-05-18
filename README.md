@@ -2,6 +2,8 @@
 
 This Chrome extension shows the opportunity cost of purchases in terms of potential Bitcoin value. When you browse websites, it automatically detects prices and shows what they could be worth in the future if that money was invested in Bitcoin instead.
 
+> "Bitcoin will teach everyone opportunity cost" ~ Saifedean Ammous
+
 ![Bitcoin Opportunity Cost Extension](images/screenshot.png)
 
 ## Features

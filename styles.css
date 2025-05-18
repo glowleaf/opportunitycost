@@ -7,6 +7,25 @@
   transition: color 0.2s ease;
 }
 
+.btc-opportunity-cost .future-value {
+  color: #f7931a; /* Bitcoin orange */
+  font-weight: 600;
+  display: inline;
+}
+
+.btc-opportunity-cost .original-value {
+  display: none;
+  color: inherit;
+}
+
+.btc-opportunity-cost:hover .future-value {
+  display: none;
+}
+
+.btc-opportunity-cost:hover .original-value {
+  display: inline;
+}
+
 .btc-opportunity-cost:hover {
   color: #e17f0e; /* Darker orange on hover */
 }

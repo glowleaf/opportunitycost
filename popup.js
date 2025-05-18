@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load saved state and settings
   const { 
     enabledSites = {}, 
-    settings = { cagr: 40, years: 4 }
+    settings = { cagr: 40, years: 5 }
   } = await chrome.storage.sync.get(['enabledSites', 'settings']);
   
   // Initialize toggle state

@@ -1,8 +1,8 @@
 // Bitcoin Opportunity Cost Chrome Extension
 // Shows potential future value of purchases if invested in Bitcoin instead
 
-const CAGR = 0.40; // 40% annual growth
-const YEARS = 4;
+let CAGR = 0.40; // 40% annual growth
+let YEARS = 5;
 const BATCH_SIZE = 5; // Safe batch size
 const PROCESSING_DELAY = 200; // Delay between batches
 const MAX_QUEUE_SIZE = 500; // Prevent queue from growing too large
@@ -26,10 +26,10 @@ const processedCache = new Map();
 async function getBTCPrices() {
   try {
     const { btcPrices: storedPrices } = await chrome.storage.local.get('btcPrices');
-    if (!storedPrices?.bitcoin) return false;
-    const requiredCurrencies = ['usd', 'eur', 'gbp', 'jpy', 'cad', 'aud', 'chf', 'cny', 'sek', 'nzd'];
-    const hasAllPrices = requiredCurrencies.every(currency => typeof storedPrices.bitcoin[currency] === 'number' && storedPrices.bitcoin[currency] > 0);
-    if (!hasAllPrices) return false;
+    if (!storedPrices?.bitcoin) {
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait a second and try again
+      return getBTCPrices();
+    }
     btcPrices = storedPrices.bitcoin;
     return true;
   } catch (error) {
@@ -38,14 +38,21 @@ async function getBTCPrices() {
   }
 }
 
-function calculateFutureValue(fiatAmount, currency) {
-  const btcPrice = btcPrices[currency.toLowerCase()];
-  if (!btcPrice || !isFinite(btcPrice) || btcPrice <= 0) return null;
-  const btcAmount = fiatAmount / btcPrice;
-  if (!isFinite(btcAmount)) return null;
-  const futureBTCPrice = btcPrice * Math.pow(1 + CAGR, YEARS);
-  if (!isFinite(futureBTCPrice)) return null;
-  return (btcAmount * futureBTCPrice).toFixed(2);
+// Calculate future value based on CAGR and time horizon
+function calculateFutureValue(currentValue, currencyCode) {
+  try {
+    if (!btcPrices || !btcPrices[currencyCode.toLowerCase()]) return null;
+    const btcPrice = btcPrices[currencyCode.toLowerCase()];
+    // Calculate how much BTC we can buy with the current amount
+    const btcAmount = currentValue / btcPrice;
+    // Calculate how much BTC will grow over time - CAGR is already in decimal form (0.40 for 40%)
+    const futureBtcValue = btcAmount * Math.pow(1 + CAGR, YEARS);
+    // Convert future BTC back to original currency using CURRENT price
+    return futureBtcValue * btcPrice;
+  } catch (error) {
+    console.error('Error calculating future value:', error);
+    return null;
+  }
 }
 
 const CURRENCY_PATTERNS = {
@@ -128,7 +135,8 @@ function processTextNode(node) {
   while ((match = priceRegex.exec(text)) !== null && replacements < MAX_REPLACEMENTS) {
     const [fullMatch, symbolBefore, amountBefore, amountAfter, symbolAfter] = match;
     const symbol = symbolBefore || symbolAfter;
-    const amount = (amountBefore || amountAfter).replace(/\s/g, '').replace(',', '.');
+    // First remove spaces, then handle the last decimal/comma as decimal point
+    const amount = (amountBefore || amountAfter).replace(/\s/g, '').replace(/(\d+)[,.](\d{2})$/, '$1.$2').replace(/,/g, '');
     const fiat = parseFloat(amount);
     if (!isFinite(fiat) || fiat <= 0) continue;
     
@@ -156,39 +164,15 @@ function processTextNode(node) {
     });
 
     const original = `${amount} ${currencyData.symbol}`.trim();
-    const tooltipContent = `
-      <div class="btc-opportunity-tooltip">
-        <div class="tooltip-header">Bitcoin Opportunity Cost</div>
-        <div class="tooltip-content">
-          <div class="price-row">
-            <span class="label">Current Price:</span>
-            <span class="value">${original}</span>
-          </div>
-          <div class="price-row">
-            <span class="label">BTC Equivalent:</span>
-            <span class="value">₿${btcAmount}</span>
-          </div>
-          <div class="price-row highlight">
-            <span class="label">Future Value:</span>
-            <span class="value">${currencyData.symbol}${Number(future).toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}</span>
-          </div>
-          <div class="tooltip-footer">
-            <div>Based on ${CAGR * 100}% CAGR over ${YEARS} years</div>
-            <div class="disclaimer">Past performance does not guarantee future results</div>
-          </div>
-        </div>
-      </div>
-    `;
+    const tooltipContent = createTooltipHTML(original, future, currencyData.symbol);
     
     const replacement = `
       <span class="btc-opportunity-cost">
-        ${currencyData.symbol}${Number(future).toLocaleString(undefined, {
+        <span class="future-value">${currencyData.symbol}${Number(future).toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
-        })}
+        })}</span>
+        <span class="original-value">${original}</span>
         ${tooltipContent}
       </span>
     `;
@@ -294,20 +278,54 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       isEnabled = message.enabled;
       if (isEnabled) {
         observeVisibleTextNodes(document.body);
+      } else {
+        // Remove all conversions when disabled
+        document.querySelectorAll('.btc-opportunity-cost').forEach(node => {
+          const originalText = node.querySelector('.original-value').textContent;
+          node.replaceWith(originalText);
+        });
+        // Clear cache when disabled
+        processedCache.clear();
       }
     } else if (message.type === 'INIT_STATE') {
       isEnabled = message.enabled;
       if (isEnabled) {
         init();
+      } else {
+        // Remove all conversions when disabled
+        document.querySelectorAll('.btc-opportunity-cost').forEach(node => {
+          const originalText = node.querySelector('.original-value').textContent;
+          node.replaceWith(originalText);
+        });
+        // Clear cache when disabled
+        processedCache.clear();
       }
     } else if (message.type === 'SETTINGS_CHANGED') {
-      // Update CAGR and YEARS settings
-      CAGR = message.settings.cagr / 100; // Convert percentage to decimal
+      // Update CAGR and YEARS settings - CAGR comes in as percentage (40), store as decimal (0.40)
+      CAGR = message.settings.cagr / 100;
       YEARS = message.settings.years;
       
-      // Re-process all visible nodes with new settings
+      // Force re-processing of all nodes with new settings
+      processedCache.clear(); // Clear cache
       if (isEnabled) {
-        processedCache.clear(); // Clear cache to force re-processing
+        // Re-process the entire page
+        observeVisibleTextNodes(document.body);
+        // Force immediate update of visible nodes
+        const walker = document.createTreeWalker(
+          document.body,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+        let node;
+        while (node = walker.nextNode()) {
+          processTextNode(node);
+        }
+      }
+    } else if (message.type === 'PRICES_UPDATED') {
+      console.log('Received updated prices');
+      btcPrices = message.prices.bitcoin;
+      processedCache.clear(); // Clear cache to force re-processing with new prices
+      if (isEnabled) {
         observeVisibleTextNodes(document.body);
       }
     }
@@ -317,10 +335,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 // Initialize and run the plugin
-async function init() {
+async function init(retryCount = 0) {
   try {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 2000; // 2 seconds
+
     const pricesLoaded = await getBTCPrices();
-    if (!pricesLoaded) return;
+    if (!pricesLoaded) {
+      if (retryCount < MAX_RETRIES) {
+        console.log(`Retrying initialization (${retryCount + 1}/${MAX_RETRIES})...`);
+        setTimeout(() => init(retryCount + 1), RETRY_DELAY);
+        return;
+      } else {
+        console.error('Failed to load Bitcoin prices after max retries');
+        return;
+      }
+    }
+
+    // Only proceed with initialization if prices are loaded
     observeVisibleTextNodes(document.body);
     
     const observer = new MutationObserver((mutations) => {
@@ -352,6 +384,9 @@ async function init() {
     });
   } catch (error) {
     console.error('Error in init:', error);
+    if (retryCount < MAX_RETRIES) {
+      setTimeout(() => init(retryCount + 1), RETRY_DELAY);
+    }
   }
 }
 
